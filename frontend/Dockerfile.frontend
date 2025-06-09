@@ -1,0 +1,41 @@
+# ── Stage 1: Builder (依存関係のインストールとビルド) ──
+FROM node:18-slim AS builder
+
+# 作業ディレクトリを設定
+WORKDIR /app
+
+# ビルド用に必要最小限のパッケージを追加
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends bash git curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 依存関係ファイルのみをコピーしてキャッシュを最大化
+COPY package.json yarn.lock* ./
+
+# Expo CLI をグローバルインストール
+RUN yarn global add expo
+
+# 依存関係をインストール（--frozen-lockfile で再現性確保）
+RUN yarn install --frozen-lockfile
+
+# アプリケーションソースをコピー
+COPY . .
+
+# ── Stage 2: Runtime (実行用イメージ) ──
+FROM node:18-slim AS runner
+
+# 非 root ユーザーを作成してセキュリティ向上
+RUN useradd --create-home --shell /bin/bash appuser
+
+WORKDIR /app
+
+# builder ステージから必要なファイルをコピー
+COPY --from=builder /app /app
+
+# 実行環境変数
+ENV NODE_ENV=production \
+    EXPO_NO_UPDATE_CHECK=1 \
+    LOG_LEVEL=info
+
+# 権限を委譲
+USER appuser

@@ -1,0 +1,67 @@
+version: "3.12"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+      network: host  # ビルド時にホストネットワークを利用
+    command: ["gunicorn", "app.main:app",
+              "--worker-class", "uvicorn.workers.UvicornWorker", 
+              "--workers", "5", 
+              "--bind", "0.0.0.0:8000", 
+              "--log-level", "info"]
+    container_name: fastapi
+    ports:
+      - "8000:8000"        # 外部に公開
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app/app:cached
+      - ./.env:/app/.env:ro
+    networks:
+      - public_network
+      - internal_network
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+      network: host  # ビルド時にホストネットワークを利用
+    container_name: react-native
+    command: ["yarn", "start"]
+    depends_on:
+      - backend
+    volumes:
+      - ./app:/app/app:cached
+      - ./.env:/app/.env:ro
+    networks:
+      - internal_network
+      - public_network
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    
+  db:
+    image: postgres:13
+    container_name: postgres_mobile_db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal_network
+
+networks:
+  public_network:
+    driver: bridge
+  internal_network:
+    internal: true   # 外部から隔離された内部ネットワーク
+
+volumes:
+  postgres_data:
