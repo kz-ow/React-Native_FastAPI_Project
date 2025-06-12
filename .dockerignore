@@ -45,3 +45,12 @@ pip-wheel-metadata/
 # OS 固有ファイル
 .DS_Store
 Thumbs.db
+
+# Node.js関連
+# ホストの node_modules はイメージに含めない
+node_modules
+**/node_modules
+
+# Git 管理外ファイルも除外
+.git
+.DS_Store

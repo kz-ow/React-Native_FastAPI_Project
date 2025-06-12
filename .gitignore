@@ -171,3 +171,8 @@ cython_debug/
 
 # 鍵
 *.pem
+
+# React Native specific directories
+node_modules/
+
+.env

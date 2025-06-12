@@ -6,19 +6,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile.backend
       network: host  # ビルド時にホストネットワークを利用
-    command: ["gunicorn", "app.main:app",
-              "--worker-class", "uvicorn.workers.UvicornWorker", 
-              "--workers", "5", 
-              "--bind", "0.0.0.0:8000", 
-              "--log-level", "info"]
-    container_name: fastapi
-    ports:
-      - "8000:8000"        # 外部に公開
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--reload",]
+    container_name: fastapi       
     depends_on:
       - db
     volumes:
-      - ./app:/app/app:cached
-      - ./.env:/app/.env:ro
+      - ./backend:/backend:cached
+      - ./.env:/backend/.env:ro
     networks:
       - public_network
       - internal_network
@@ -32,12 +26,16 @@ services:
       dockerfile: Dockerfile.frontend
       network: host  # ビルド時にホストネットワークを利用
     container_name: react-native
-    command: ["yarn", "start"]
+    ports:
+      - "3000:3000"
+    entrypoint: []
+    command: ["npx", "expo", "start", "--web", "--host", "localhost"]
     depends_on:
       - backend
     volumes:
-      - ./app:/app/app:cached
-      - ./.env:/app/.env:ro
+      - ./frontend:/frontend:cached
+      - ./frontend/node_modules:/frontend/node_modules:ro
+      - ./.env:/frontend/.env:ro
     networks:
       - internal_network
       - public_network
@@ -65,3 +63,4 @@ networks:
 
 volumes:
   postgres_data:
+  frontend_node_modules: {}
