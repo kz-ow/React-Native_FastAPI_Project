@@ -27,7 +27,9 @@ services:
       network: host  # ビルド時にホストネットワークを利用
     container_name: react-native
     ports:
-      - "3000:3000"
+      - "8081:8081"
+    environment:
+      - NODE_ENV=production
     entrypoint: []
     command: ["npx", "expo", "start", "--web", "--host", "localhost"]
     depends_on:
