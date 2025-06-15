@@ -7,32 +7,17 @@ WORKDIR /frontend
 # 依存関係ファイルのみをコピーしてキャッシュを最大化
 COPY package*.json ./
 
-# expo-cli をグローバルにインストール
-RUN npm install -g expo-cli
-
 # 依存関係をインストール
 RUN npm install
 
 # アプリケーションソースをコピー
 COPY . .
 
+
 # ── Stage 2: Runtime (実行用イメージ) ──
 FROM node:22-slim AS runner
-
-# expo-cli をグローバルにインストール
-RUN npm install -g expo-cli
-
-# 非 root ユーザーを作成してセキュリティ向上
-RUN useradd --create-home --shell /bin/bash appuser
-
+ 
 WORKDIR /frontend
 
 # builder ステージから必要なファイルをコピー
 COPY --from=builder /frontend /frontend
-
-# 実行環境変数
-ENV NODE_ENV=production \
-    EXPO_NO_UPDATE_CHECK=1 \
-    LOG_LEVEL=info
-
-USER appuser
