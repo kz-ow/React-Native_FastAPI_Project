@@ -1,27 +1,36 @@
 # backend/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from schemas import TextSchema
+from 
 import logging
 
 logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI(
     title="バックエンド",
-    description="モバイルアプリケーションのバックエンドAPI",
+    description="モバイルアプリケーションのバックエンド",
     version="0.1.0",
     redirect_slashes=False
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],            # 本番ではフロントのURLだけに制限
+    allow_methods=["*"],            # OPTIONS, POST, GET…すべて許可
+    allow_headers=["*"],            # content-type も含めてすべて許可
+)
 
-# health check endpoint
-@app.get("/health", tags=["Health Check"])
-async def health_check():
+@app.post("/test", tags=["Test"])
+async def test_endpoint(data: TextSchema):
     """
-    健康チェック用のエンドポイント。
-    アプリケーションが正常に動作しているかを確認します。
+    テスト用のエンドポイント。
+    受け取ったデータに”checked”を付けて返します。
     """
-    return {"status": "ok", "message": "Application is running smoothly."}
-
+    logger.info(f"Received data: {data}")
+    payload = data.text + " accepted!!"
+    return {"status": "success", "output_payload": payload}
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=80, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

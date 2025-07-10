@@ -7,15 +7,17 @@ services:
       dockerfile: Dockerfile.backend
       network: host  # ビルド時にホストネットワークを利用
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--reload",]
-    container_name: fastapi       
+    container_name: fastapi 
+    ports:
+      - "8000:8000"   
     depends_on:
       - db
     volumes:
       - ./backend:/backend:cached
       - ./.env:/backend/.env:ro
     networks:
-      - public_network
       - internal_network
+      - public_network
     dns:
       - 8.8.8.8
       - 1.1.1.1
